@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Saturated Fat Tracker</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F7F5F0;--bg-card:#FFFFFF;--bg-surface:#F0EDE6;
+  --text-primary:#1A1814;--text-secondary:#6B6760;--text-hint:#9B9790;
+  --border:rgba(26,24,20,0.1);--border-md:rgba(26,24,20,0.18);
+  --radius:12px;--radius-sm:8px;
+}
+body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text-primary);min-height:100vh;padding:1.5rem 1rem 4rem;line-height:1.6}
+.wrap{max-width:740px;margin:0 auto}
+.eyebrow{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text-hint);margin-bottom:8px}
+h1{font-size:clamp(22px,5vw,34px);font-weight:400;line-height:1.15;margin-bottom:8px;color:var(--text-primary)}
+h1 em{font-style:italic;color:var(--text-secondary)}
+.header-sub{font-size:14px;color:var(--text-secondary);line-height:1.7;max-width:520px;margin-bottom:2rem}
+.toggle-row{display:flex;align-items:center;gap:10px;margin-bottom:1.5rem;flex-wrap:wrap}
+.toggle-group{display:flex;background:var(--bg-surface);border-radius:100px;padding:3px;gap:2px}
+.tbtn{padding:5px 14px;font-size:12px;font-weight:500;font-family:inherit;border:none;border-radius:100px;cursor:pointer;transition:all .18s;background:transparent;color:var(--text-secondary)}
+.tbtn.on{background:var(--bg-card);color:var(--text-primary);box-shadow:0 1px 4px rgba(0,0,0,.10)}
+.gl-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1.5rem}
+.gl-card{background:var(--bg-surface);border-radius:var(--radius-sm);padding:.85rem 1rem}
+.gl-org{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-hint);margin-bottom:2px}
+.gl-val{font-size:26px;font-weight:400;color:var(--text-primary);line-height:1.1}
+.gl-note{font-size:10px;color:var(--text-hint);margin-top:2px}
+.card{background:var(--bg-card);border:0.5px solid var(--border);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.25rem;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.card-title{font-size:15px;font-weight:600;color:var(--text-primary);margin-bottom:4px}
+.card-sub{font-size:12px;color:var(--text-secondary);margin-bottom:1.25rem}
+.sel-row{display:grid;grid-template-columns:1fr 80px auto;gap:8px;align-items:end;margin-bottom:8px}
+.flabel{font-size:11px;font-weight:500;color:var(--text-secondary);display:block;margin-bottom:5px}
+select,input[type=number]{font-family:inherit;font-size:13px;padding:8px 12px;border:0.5px solid var(--border-md);border-radius:var(--radius-sm);background:var(--bg-surface);color:var(--text-primary);width:100%;outline:none;appearance:none;-webkit-appearance:none}
+.abtn{padding:8px 16px;font-family:inherit;font-size:13px;font-weight:500;border:0.5px solid var(--border-md);border-radius:var(--radius-sm);background:var(--text-primary);color:#fff;cursor:pointer;white-space:nowrap}
+.abtn:hover{opacity:.85}
+.hint{font-size:11px;color:var(--text-hint);font-style:italic;margin-bottom:1rem;min-height:16px}
+.empty{text-align:center;padding:1.5rem;font-size:13px;color:var(--text-hint);border:0.5px dashed var(--border-md);border-radius:var(--radius-sm)}
+.sel-item{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:0.5px solid var(--border);font-size:13px}
+.sel-item:last-child{border-bottom:none}
+.rmv{background:none;border:none;color:var(--text-hint);cursor:pointer;font-size:18px;line-height:1;padding:0 4px}
+.rmv:hover{color:#C94040}
+.prog{border-top:0.5px solid var(--border);padding-top:1rem;margin-top:.5rem}
+.total-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
+.total-lbl{font-size:12px;color:var(--text-secondary)}
+.total-val{font-size:22px;font-weight:400;color:var(--text-primary)}
+.bar-row{display:grid;grid-template-columns:44px 1fr 42px;align-items:center;gap:10px;margin-bottom:9px}
+.bar-org{font-size:11px;font-weight:600;color:var(--text-secondary)}
+.bar-track{height:7px;background:var(--bg-surface);border-radius:4px;overflow:hidden}
+.bar-fill{height:7px;border-radius:4px;transition:width .35s}
+.bar-pct{font-size:12px;font-weight:600;text-align:right}
+.filter-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1rem}
+.fbtn{padding:4px 12px;font-size:11px;font-weight:500;font-family:inherit;border:0.5px solid var(--border-md);border-radius:100px;cursor:pointer;background:transparent;color:var(--text-secondary);transition:all .15s}
+.fbtn.on{background:var(--text-primary);color:#fff;border-color:var(--text-primary)}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-hint);text-align:left;padding:6px 10px;border-bottom:0.5px solid var(--border-md);white-space:nowrap}
+th.r{text-align:right}
+td{padding:9px 10px;border-bottom:0.5px solid var(--border);color:var(--text-primary);vertical-align:top}
+tr:hover td{background:var(--bg-surface)}
+.badge{display:inline-block;font-size:10px;font-weight:600;padding:2px 8px;border-radius:100px;white-space:nowrap}
+.pct-row{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text-hint);margin-bottom:4px}
+.mini-bar{height:4px;border-radius:2px;min-width:2px}
+.vis-txt{font-size:11px;color:var(--text-secondary);line-height:1.6}
+.footer{margin-top:2rem;font-size:11px;color:var(--text-hint);line-height:1.7;border-top:0.5px solid var(--border);padding-top:1.25rem}
+@media(max-width:520px){.sel-row{grid-template-columns:1fr 70px auto}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Nutrition reference</div>
+  <h1>Saturated fat <em>in your diet</em></h1>
+  <p class="header-sub">How much saturated fat is in common foods, scaled against major nutrition guidelines. Build your plate and see how your day adds up.</p>
+
+  <div class="toggle-row">
+    <span style="font-size:12px;color:var(--text-secondary);font-weight:500">Profile:</span>
+    <div class="toggle-group">
+      <button class="tbtn on" onclick="setRisk('general')">General public</button>
+      <button class="tbtn" onclick="setRisk('high')">High cardiovascular risk</button>
+    </div>
+  </div>
+
+  <div class="gl-grid" id="glGrid"></div>
+
+  <div class="card">
+    <p class="card-title">Build your plate</p>
+    <p class="card-sub">Add foods and portions to see your total saturated fat against all three guidelines.</p>
+    <div class="sel-row">
+      <div><label class="flabel">Food item</label><select id="foodSel"></select></div>
+      <div><label class="flabel">Amount</label><input type="number" id="portIn" value="100" min="1" max="999" /></div>
+      <div><label class="flabel" style="opacity:0">-</label><button class="abtn" onclick="addFood()">+ Add</button></div>
+    </div>
+    <p class="hint" id="hintTxt"></p>
+    <div id="selList"></div>
+    <div id="progSec"></div>
+  </div>
+
+  <div class="card">
+    <p class="card-title" style="margin-bottom:1rem">Reference table</p>
+    <div class="filter-row" id="filterRow"></div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr>
+          <th>Food</th><th>Category</th><th class="r">Per 100g</th><th>% of daily limit</th><th>Visual portion</th>
+        </tr></thead>
+        <tbody id="tblBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="footer">
+    <strong>Guidelines:</strong> WHO &amp; EFSA (≤10% energy, adjusted ≤7% for high CVD risk) · AHA (≤6% energy, ~13g/day at 2000 kcal).<br>
+    <strong>Data:</strong> USDA FoodData Central, EFSA Food Consumption Database, manufacturer nutrition panels.<br>
+    For educational purposes only. Consult a registered dietitian for personalised guidance.
+  </div>
+</div>
+
+<script>
+const guidelines={general:{WHO:{limit:22,label:"WHO",note:"< 10% of 2000 kcal"},AHA:{limit:13,label:"AHA",note:"< 6% of 2000 kcal"},EFSA:{limit:22,label:"EFSA",note:"< 10% of 2000 kcal"}},high:{WHO:{limit:16,label:"WHO",note:"< 7% of 2000 kcal"},AHA:{limit:13,label:"AHA",note:"< 6% of 2000 kcal"},EFSA:{limit:16,label:"EFSA",note:"< 7% of 2000 kcal"}}};
+const foods=[
+  {name:"Butter",cat:"Oils & fats",sat:51,unit:"g",portions:[{g:10,desc:"1 tsp spread"},{g:14,desc:"1 tbsp"}]},
+  {name:"Coconut oil",cat:"Oils & fats",sat:87,unit:"g",portions:[{g:14,desc:"1 tbsp"}]},
+  {name:"Coconut cream (canned)",cat:"Oils & fats",sat:22,unit:"ml",portions:[{g:30,desc:"2 tbsp"},{g:60,desc:"quarter cup"}]},
+  {name:"Coconut milk, full-fat (canned)",cat:"Oils & fats",sat:19,unit:"ml",portions:[{g:60,desc:"quarter cup"},{g:100,desc:"small ladle"},{g:400,desc:"1 standard can"}]},
+  {name:"Coconut milk, light (canned)",cat:"Oils & fats",sat:6,unit:"ml",portions:[{g:60,desc:"quarter cup"},{g:100,desc:"small ladle"},{g:400,desc:"1 standard can"}]},
+  {name:"Olive oil",cat:"Oils & fats",sat:14,unit:"g",portions:[{g:14,desc:"1 tbsp"}]},
+  {name:"Vegetable shortening",cat:"Oils & fats",sat:25,unit:"g",portions:[{g:13,desc:"1 tbsp"}]},
+  {name:"Margarine (hard block)",cat:"Margarine & shortenings",sat:18,unit:"g",portions:[{g:10,desc:"1 tsp spread"},{g:14,desc:"1 tbsp"}]},
+  {name:"Margarine (soft / tub)",cat:"Margarine & shortenings",sat:8,unit:"g",portions:[{g:10,desc:"1 tsp spread"}]},
+  {name:"Whole milk (full-fat)",cat:"Dairy & eggs",sat:2.3,unit:"ml",portions:[{g:240,desc:"1 cup"},{g:30,desc:"splash in coffee"}]},
+  {name:"Semi-skimmed milk (1.5–2%)",cat:"Dairy & eggs",sat:1.0,unit:"ml",portions:[{g:240,desc:"1 cup"},{g:30,desc:"splash in coffee"}]},
+  {name:"Skimmed milk (0–0.5%)",cat:"Dairy & eggs",sat:0.1,unit:"ml",portions:[{g:240,desc:"1 cup"},{g:30,desc:"splash in coffee"}]},
+  {name:"Full-fat yoghurt",cat:"Dairy & eggs",sat:2.5,unit:"g",portions:[{g:150,desc:"small pot"},{g:200,desc:"large pot"}]},
+  {name:"Low-fat yoghurt (0.5–2%)",cat:"Dairy & eggs",sat:0.5,unit:"g",portions:[{g:150,desc:"small pot"},{g:200,desc:"large pot"}]},
+  {name:"Greek yoghurt (full-fat)",cat:"Dairy & eggs",sat:3.3,unit:"g",portions:[{g:150,desc:"small pot"},{g:200,desc:"large bowl"}]},
+  {name:"Greek yoghurt (low-fat)",cat:"Dairy & eggs",sat:0.8,unit:"g",portions:[{g:150,desc:"small pot"},{g:200,desc:"large bowl"}]},
+  {name:"Cottage cheese (low-fat)",cat:"Dairy & eggs",sat:0.7,unit:"g",portions:[{g:100,desc:"half a small tub"},{g:200,desc:"full small tub"}]},
+  {name:"Cheddar cheese",cat:"Dairy & eggs",sat:21,unit:"g",portions:[{g:30,desc:"matchbox-size slice"},{g:50,desc:"palm-size portion"}]},
+  {name:"Egg (whole)",cat:"Dairy & eggs",sat:1.6,unit:"g",portions:[{g:50,desc:"1 medium egg"},{g:60,desc:"1 large egg"}]},
+  {name:"Cream cheese",cat:"Dairy & eggs",sat:18,unit:"g",portions:[{g:30,desc:"2 tbsp"}]},
+  {name:"Plant-based cheese",cat:"Plant-based dairy",sat:8,unit:"g",portions:[{g:30,desc:"matchbox-size slice"}]},
+  {name:"Plant-based yoghurt (coconut)",cat:"Plant-based dairy",sat:4,unit:"g",portions:[{g:150,desc:"small pot"}]},
+  {name:"Plant-based yoghurt (soy / almond)",cat:"Plant-based dairy",sat:0.5,unit:"g",portions:[{g:150,desc:"small pot"}]},
+  {name:"Beyond Burger patty",cat:"Plant-based meat",sat:4.5,unit:"g",portions:[{g:113,desc:"1 standard patty"},{g:71,desc:"1 small patty"}]},
+  {name:"Impossible Burger patty",cat:"Plant-based meat",sat:6.0,unit:"g",portions:[{g:113,desc:"1 standard patty"}]},
+  {name:"Beyond Beef mince",cat:"Plant-based meat",sat:4.5,unit:"g",portions:[{g:100,desc:"golf-ball size"},{g:150,desc:"burger patty"}]},
+  {name:"Quorn chicken pieces (mycoprotein)",cat:"Plant-based meat",sat:0.8,unit:"g",portions:[{g:100,desc:"small handful"},{g:150,desc:"generous serving"}]},
+  {name:"Quorn chicken fillets (mycoprotein)",cat:"Plant-based meat",sat:0.7,unit:"g",portions:[{g:100,desc:"1 small fillet"},{g:150,desc:"1 standard fillet"}]},
+  {name:"Soy-based chicken substitute",cat:"Plant-based meat",sat:1.0,unit:"g",portions:[{g:100,desc:"palm of hand"},{g:150,desc:"generous serving"}]},
+  {name:"Legume-based veggie burger",cat:"Plant-based meat",sat:0.5,unit:"g",portions:[{g:100,desc:"1 patty"}]},
+  {name:"Chicken breast (grilled, skinless)",cat:"Meats & poultry",sat:0.9,unit:"g",portions:[{g:120,desc:"palm of hand"},{g:150,desc:"standard fillet"}]},
+  {name:"Chicken thigh (skinless, grilled)",cat:"Meats & poultry",sat:2.6,unit:"g",portions:[{g:100,desc:"1 medium thigh"},{g:150,desc:"1 large thigh"}]},
+  {name:"Chicken thigh (skin-on, grilled)",cat:"Meats & poultry",sat:4.7,unit:"g",portions:[{g:100,desc:"1 medium thigh"},{g:150,desc:"1 large thigh"}]},
+  {name:"Turkey breast (roasted)",cat:"Meats & poultry",sat:0.7,unit:"g",portions:[{g:100,desc:"palm of hand"},{g:150,desc:"generous serving"}]},
+  {name:"Beef sirloin / lean steak (grilled)",cat:"Meats & poultry",sat:2.5,unit:"g",portions:[{g:150,desc:"palm of hand, ~2 cm thick"},{g:200,desc:"restaurant portion"}]},
+  {name:"Beef mince 5% fat (lean)",cat:"Meats & poultry",sat:2.0,unit:"g",portions:[{g:100,desc:"golf-ball size (raw)"},{g:150,desc:"burger patty"}]},
+  {name:"Beef mince 20% fat",cat:"Meats & poultry",sat:8,unit:"g",portions:[{g:100,desc:"golf-ball size (raw)"},{g:150,desc:"burger patty"}]},
+  {name:"Pork tenderloin (roasted)",cat:"Meats & poultry",sat:1.1,unit:"g",portions:[{g:100,desc:"palm of hand"},{g:150,desc:"generous serving"}]},
+  {name:"Pork belly (roasted)",cat:"Meats & poultry",sat:14,unit:"g",portions:[{g:100,desc:"palm of hand, ~1 cm thick"},{g:150,desc:"generous serving"}]},
+  {name:"Lamb chop (grilled)",cat:"Meats & poultry",sat:11,unit:"g",portions:[{g:100,desc:"1 small chop"}]},
+  {name:"Lamb leg (lean, roasted)",cat:"Meats & poultry",sat:3.5,unit:"g",portions:[{g:100,desc:"palm of hand"},{g:150,desc:"generous serving"}]},
+  {name:"Croissant",cat:"Packaged & processed",sat:11,unit:"g",portions:[{g:57,desc:"1 standard croissant"}]},
+  {name:"Butter cookies / biscuits",cat:"Packaged & processed",sat:14,unit:"g",portions:[{g:30,desc:"3 to 4 small cookies"}]},
+  {name:"Crackers",cat:"Packaged & processed",sat:5,unit:"g",portions:[{g:30,desc:"6 to 8 crackers"}]},
+  {name:"Protein bar (average)",cat:"Packaged & processed",sat:4,unit:"g",portions:[{g:60,desc:"1 standard bar"}]},
+  {name:"Protein bar (high-fat)",cat:"Packaged & processed",sat:8,unit:"g",portions:[{g:60,desc:"1 standard bar"}]},
+  {name:"Fast food fries (large)",cat:"Packaged & processed",sat:5,unit:"g",portions:[{g:154,desc:"large portion"}]},
+  {name:"Cheeseburger (fast food)",cat:"Packaged & processed",sat:12,unit:"g",portions:[{g:200,desc:"standard burger"}]}
+];
+const catStyles={"Oils & fats":{bg:"#EBF1FD",tx:"#1A3F8F"},"Margarine & shortenings":{bg:"#FEF3DC",tx:"#7A4A08"},"Dairy & eggs":{bg:"#EAF3DE",tx:"#275010"},"Plant-based dairy":{bg:"#E1F5EE",tx:"#085041"},"Plant-based meat":{bg:"#EEEDFE",tx:"#3C3489"},"Meats & poultry":{bg:"#FAECE7",tx:"#712B13"},"Packaged & processed":{bg:"#FBEAF0",tx:"#72243E"}};
+const cats=["All",...Object.keys(catStyles)];
+let risk="general",activeFilter="All",selections=[];
+
+function gc(p){return p<=70?"#1D9E75":p<=100?"#C8820F":"#C94040"}
+
+function setRisk(r){
+  risk=r;
+  document.querySelectorAll('.tbtn').forEach((b,i)=>b.classList.toggle('on',(i===0&&r==='general')||(i===1&&r==='high')));
+  renderGL();renderProg();renderTable();
+}
+
+function renderGL(){
+  const g=guidelines[risk];
+  document.getElementById('glGrid').innerHTML=Object.values(g).map(gl=>`<div class="gl-card"><div class="gl-org">${gl.label}</div><div class="gl-val">${gl.limit}g</div><div class="gl-note">${gl.note}</div></div>`).join('');
+}
+
+function renderProg(){
+  const el=document.getElementById('progSec');
+  if(!selections.length){el.innerHTML='';return;}
+  const glv=Object.values(guidelines[risk]);
+  const total=selections.reduce((s,x)=>s+x.sat,0);
+  el.innerHTML=`<div class="prog"><div class="total-row"><span class="total-lbl">Total saturated fat</span><span class="total-val">${total.toFixed(1)}g</span></div>${glv.map(gl=>{const pct=Math.min((total/gl.limit)*100,110);const c=gc(pct);return`<div class="bar-row"><span class="bar-org">${gl.label}</span><div class="bar-track"><div class="bar-fill" style="width:${Math.min(pct,100)}%;background:${c}"></div></div><span class="bar-pct" style="color:${c}">${Math.round(pct)}%</span></div>`;}).join('')}</div>`;
+}
+
+function renderList(){
+  const el=document.getElementById('selList');
+  if(!selections.length){el.innerHTML='<div class="empty">No foods added yet — try adding something above.</div>';return;}
+  el.innerHTML=`<div style="margin-bottom:1rem">${selections.map((s,i)=>`<div class="sel-item"><span><span style="font-weight:500">${s.name}</span><span style="color:var(--text-hint)"> · ${s.g}${s.unit}</span></span><span style="display:flex;align-items:center;gap:12px"><span style="font-weight:600">${s.sat.toFixed(1)}g</span><button class="rmv" onclick="rmv(${i})">×</button></span></div>`).join('')}</div>`;
+}
+
+function addFood(){
+  const idx=parseInt(document.getElementById('foodSel').value);
+  const f=foods[idx];const g=parseFloat(document.getElementById('portIn').value)||100;
+  selections.push({name:f.name,g,sat:(f.sat*g)/100,unit:f.unit});
+  renderList();renderProg();
+}
+
+function rmv(i){selections.splice(i,1);renderList();renderProg();}
+
+function updateHint(){
+  const f=foods[parseInt(document.getElementById('foodSel').value)];
+  document.getElementById('hintTxt').textContent=f.portions.map(p=>`${p.g}${f.unit} = ${p.desc}`).join('  ·  ');
+  document.getElementById('portIn').value=f.portions[0].g;
+}
+
+function populateSel(){
+  document.getElementById('foodSel').innerHTML=foods.map((f,i)=>`<option value="${i}">${f.name}</option>`).join('');
+  document.getElementById('foodSel').onchange=updateHint;
+  updateHint();
+}
+
+function renderFilters(){
+  document.getElementById('filterRow').innerHTML=cats.map(c=>`<button class="fbtn${activeFilter===c?' on':''}" onclick="setFilter('${c}')">${c}</button>`).join('');
+}
+
+function setFilter(f){activeFilter=f;renderFilters();renderTable();}
+
+function renderTable(){
+  const glv=Object.values(guidelines[risk]);
+  const filtered=activeFilter==='All'?foods:foods.filter(f=>f.cat===activeFilter);
+  document.getElementById('tblBody').innerHTML=filtered.map(f=>{
+    const pcts=glv.map(gl=>Math.round((f.sat/gl.limit)*100));
+    const cs=catStyles[f.cat]||{bg:'#F1EFE8',tx:'#444441'};
+    const pctHtml=pcts.map((p,i)=>`<div class="pct-row"><div class="mini-bar" style="width:${Math.min(p,100)*.65}px;background:${gc(p)}"></div><span style="font-weight:600;color:${gc(p)}">${p}%</span><span>${glv[i].label}</span></div>`).join('');
+    const portHtml=f.portions.map(p=>`<div>${p.g}${f.unit} = ${p.desc}</div>`).join('');
+    return`<tr><td style="font-weight:500">${f.name}</td><td><span class="badge" style="background:${cs.bg};color:${cs.tx}">${f.cat}</span></td><td style="text-align:right;font-weight:600">${f.sat}g</td><td>${pctHtml}</td><td class="vis-txt">${portHtml}</td></tr>`;
+  }).join('');
+}
+
+renderGL();populateSel();renderFilters();renderTable();renderList();
+</script>
+</body>
+</html>
